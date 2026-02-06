@@ -1,0 +1,7 @@
+{
+  "name": "Spatial Image Carousel",
+  "description": "A 3D image carousel spatial experience, controlled by hand gestures and webcam tracking.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
