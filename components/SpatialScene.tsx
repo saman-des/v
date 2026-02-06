@@ -7,6 +7,105 @@ interface Props {
   handData: HandData;
 }
 
+type DrawableSource = CanvasImageSource & {
+  width: number;
+  height: number;
+};
+
+const drawRoundedRectPath = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) => {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+};
+
+const createRoundedImageTexture = (
+  source: DrawableSource,
+): { texture: THREE.CanvasTexture; width: number; height: number } | null => {
+  const maxDimension = 1024;
+  const scale = Math.min(
+    1,
+    maxDimension / Math.max(source.width || 1, source.height || 1),
+  );
+  const width = Math.max(8, Math.round(source.width * scale));
+  const height = Math.max(8, Math.round(source.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const radius = Math.max(8, Math.round(Math.min(width, height) * 0.08));
+  drawRoundedRectPath(ctx, 0, 0, width, height, radius);
+  ctx.clip();
+  ctx.drawImage(source, 0, 0, width, height);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  return { texture, width, height };
+};
+
+const createFrameTexture = (
+  width: number,
+  height: number,
+  padding: number,
+): THREE.CanvasTexture | null => {
+  const frameWidth = Math.max(12, Math.round(width + padding * 2));
+  const frameHeight = Math.max(12, Math.round(height + padding * 2));
+  const canvas = document.createElement("canvas");
+  canvas.width = frameWidth;
+  canvas.height = frameHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const radius = Math.max(10, Math.round(Math.min(frameWidth, frameHeight) * 0.1));
+  const lineWidth = Math.max(2, Math.round(Math.min(frameWidth, frameHeight) * 0.02));
+  const offset = lineWidth / 2;
+
+  drawRoundedRectPath(
+    ctx,
+    offset,
+    offset,
+    frameWidth - lineWidth,
+    frameHeight - lineWidth,
+    radius,
+  );
+  ctx.fillStyle = "rgba(255, 249, 251, 0.98)";
+  ctx.fill();
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = "rgba(230, 171, 191, 0.9)";
+  ctx.stroke();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  return texture;
+};
+
 const SpatialScene: React.FC<Props> = ({ images, handData }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
@@ -38,21 +137,31 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
     containerRef.current.innerHTML = "";
     if (sceneRef.current) {
       const { renderer, group } = sceneRef.current;
-      group.children.forEach((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (child.material.map) child.material.map.dispose();
-          child.material.dispose();
+      group.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach((mat) => {
+              const texturedMat = mat as THREE.MeshBasicMaterial;
+              if (texturedMat.map) texturedMat.map.dispose();
+              mat.dispose();
+            });
+          } else {
+            const texturedMat = object.material as THREE.MeshBasicMaterial;
+            if (texturedMat.map) texturedMat.map.dispose();
+            object.material.dispose();
+          }
         }
       });
       renderer.dispose();
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xfff1f2);
+    scene.background = null;
+    scene.fog = new THREE.FogExp2(0xfbecee, 0.00038);
 
     const camera = new THREE.PerspectiveCamera(
-      50,
+      48,
       window.innerWidth / window.innerHeight,
       1,
       8000,
@@ -68,6 +177,8 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
     const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
     const group = new THREE.Group();
@@ -79,9 +190,11 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
 
     // Geometry Constants
     const isMobile = window.innerWidth < 768;
-    const radius = isMobile ? 900 : 1200;
-    const imgWidth = isMobile ? 320 : 420;
-    const imgHeight = isMobile ? 240 : 315;
+    const radius = isMobile ? 840 : 1140;
+    const imgWidth = isMobile ? 300 : 410;
+    const imgHeight = isMobile ? 225 : 300;
+    const framePadding = isMobile ? 10 : 12;
+    const frameTexturePadding = isMobile ? 14 : 16;
 
     images.forEach((img, i) => {
       // Cylindrical Carousel Logic
@@ -89,9 +202,15 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
 
       const x = Math.sin(angle) * radius;
       const z = Math.cos(angle) * radius;
-      const y = Math.sin(angle * 4) * 250;
+      const y = Math.sin(angle * 4) * 210;
 
-      // Create material first with white color
+      const frameMaterial = new THREE.MeshBasicMaterial({
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 1,
+        color: 0xffffff,
+      });
+
       const material = new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
         transparent: true,
@@ -99,52 +218,103 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
         color: 0xffffff,
       });
 
-      // Create a default placeholder mesh (will be updated when texture loads)
+      const frameGeometry = new THREE.PlaneGeometry(
+        imgWidth + framePadding * 2,
+        imgHeight + framePadding * 2,
+      );
+      const frameMesh = new THREE.Mesh(frameGeometry, frameMaterial);
+      frameMesh.position.z = -1.2;
+
       const geometry = new THREE.PlaneGeometry(imgWidth, imgHeight);
       const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.z = 0.8;
+
+      const cardGroup = new THREE.Group();
+      cardGroup.add(frameMesh);
+      cardGroup.add(mesh);
 
       // Load texture with error handling
       textureLoader.load(
         img.url,
         (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.minFilter = THREE.LinearFilter;
-          material.map = texture;
-          material.needsUpdate = true;
+          const imageSource = texture.image as DrawableSource | undefined;
+          const hasDimensions =
+            imageSource &&
+            typeof imageSource.width === "number" &&
+            typeof imageSource.height === "number" &&
+            imageSource.width > 0 &&
+            imageSource.height > 0;
 
-          // Adjust geometry to maintain aspect ratio
-          const imageAspectRatio = texture.image.width / texture.image.height;
-          const maxWidth = imgWidth;
-          const maxHeight = imgHeight;
+          if (hasDimensions) {
+            const rounded = createRoundedImageTexture(imageSource);
+            if (rounded) {
+              material.map = rounded.texture;
+              material.needsUpdate = true;
 
-          let newWidth = maxWidth;
-          let newHeight = maxWidth / imageAspectRatio;
+              const frameTexture = createFrameTexture(
+                rounded.width,
+                rounded.height,
+                frameTexturePadding,
+              );
+              if (frameTexture) {
+                frameMaterial.map = frameTexture;
+                frameMaterial.needsUpdate = true;
+              }
+            } else {
+              texture.colorSpace = THREE.SRGBColorSpace;
+              texture.minFilter = THREE.LinearFilter;
+              material.map = texture;
+              material.needsUpdate = true;
+            }
 
-          // If height exceeds max, scale down from height instead
-          if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            newWidth = maxHeight * imageAspectRatio;
+            const imageAspectRatio = imageSource.width / imageSource.height;
+            const maxWidth = imgWidth;
+            const maxHeight = imgHeight;
+
+            let newWidth = maxWidth;
+            let newHeight = maxWidth / imageAspectRatio;
+
+            if (newHeight > maxHeight) {
+              newHeight = maxHeight;
+              newWidth = maxHeight * imageAspectRatio;
+            }
+
+            geometry.scale(newWidth / maxWidth, newHeight / maxHeight, 1);
+            frameGeometry.scale(
+              (newWidth + framePadding * 2) / (imgWidth + framePadding * 2),
+              (newHeight + framePadding * 2) / (imgHeight + framePadding * 2),
+              1,
+            );
+          } else {
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.minFilter = THREE.LinearFilter;
+            material.map = texture;
+            material.needsUpdate = true;
           }
 
-          geometry.scale(newWidth / maxWidth, newHeight / maxHeight, 1);
+          if (material.map !== texture) {
+            texture.dispose();
+          }
         },
         undefined,
         (err) => {
           console.error(`Failed to load texture: ${img.url}`, err);
-          // Fallback visualization if image fails
           material.map = null;
-          material.color.set(0xffccd5); // Rose pink fallback
+          material.color.set(0xffd6de);
           material.needsUpdate = true;
+          frameMaterial.map = null;
+          frameMaterial.color.set(0xfff5f8);
+          frameMaterial.needsUpdate = true;
         },
       );
 
-      mesh.position.set(x, y, z);
-      mesh.lookAt(x * 2, y, z * 2);
+      cardGroup.position.set(x, y, z);
+      cardGroup.lookAt(x * 2, y, z * 2);
 
-      group.add(mesh);
+      group.add(cardGroup);
     });
 
-    scene.add(new THREE.AmbientLight(0xffffff, 2.5));
+    scene.add(new THREE.AmbientLight(0xffffff, 2.4));
 
     const clock = new THREE.Clock();
     sceneRef.current = { scene, camera, renderer, group, clock };
@@ -206,19 +376,20 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
       state.current.rotationY += state.current.velY;
 
       group.rotation.y = state.current.rotationY;
-      group.rotation.x = 0;
+      group.rotation.x = 0.03 + Math.sin(elapsedTime * 0.4) * 0.02;
+      group.position.y = Math.sin(elapsedTime * 0.6) * 16;
 
       const zoomSpeed = 1.0 - Math.pow(0.001, delta);
       camera.position.z +=
         (state.current.targetZoom - camera.position.z) * zoomSpeed;
 
       const isHeart = handData.isTwoHandHeartDetected;
-      const pulseSpeed = isHeart ? 8.0 : 1.0;
+      const pulseSpeed = isHeart ? 7.2 : 0.8;
       const targetScale = isHeart ? 1.1 : 1.0;
       const pulse =
         targetScale +
-        Math.sin(elapsedTime * pulseSpeed) * (isHeart ? 0.05 : 0.005);
-      group.scale.setScalar(THREE.MathUtils.lerp(group.scale.x, pulse, 0.1));
+        Math.sin(elapsedTime * pulseSpeed) * (isHeart ? 0.05 : 0.004);
+      group.scale.setScalar(THREE.MathUtils.lerp(group.scale.x, pulse, 0.09));
 
       renderer.render(scene, camera);
     };

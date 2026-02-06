@@ -1,0 +1,707 @@
+:root {
+  --bg-blush: #f6d9d9;
+  --bg-cream: #fff7ef;
+  --bg-mist: #fefcfa;
+  --ink: #4f3a3f;
+  --ink-soft: #7a6069;
+  --card: rgba(255, 250, 246, 0.72);
+  --card-border: rgba(201, 145, 160, 0.28);
+  --rose: #cc7087;
+  --rose-deep: #a8526f;
+  --glow: rgba(214, 123, 145, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.65), transparent 44%),
+    radial-gradient(circle at 84% 78%, rgba(255, 230, 237, 0.82), transparent 34%),
+    linear-gradient(145deg, var(--bg-blush), var(--bg-cream) 55%, var(--bg-mist));
+}
+
+canvas {
+  display: block;
+}
+
+.soft-grain::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), transparent 22%),
+    radial-gradient(circle at 70% 35%, rgba(245, 190, 205, 0.45), transparent 20%),
+    radial-gradient(circle at 50% 80%, rgba(255, 240, 225, 0.55), transparent 24%);
+  filter: blur(30px);
+  animation: pulseLayer 12s ease-in-out infinite alternate;
+}
+
+.soft-vignette::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 45%, rgba(80, 50, 61, 0.15) 100%);
+}
+
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 20px 60px rgba(121, 74, 92, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.headline-romance {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+.fade-rise {
+  animation: fadeRise 0.7s ease-out both;
+}
+
+.fade-rise-delayed {
+  animation: fadeRise 0.9s ease-out 0.18s both;
+}
+
+.valentine-title {
+  color: rgba(136, 50, 79, 0.96);
+  text-shadow:
+    0 1px 0 rgba(255, 238, 243, 0.65),
+    0 6px 20px rgba(163, 77, 108, 0.26);
+  animation: valentinePulse 6.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.love-lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: auto;
+  backdrop-filter: blur(8px) saturate(85%);
+  background: rgba(58, 30, 42, 0.4);
+  animation: loveOverlayIn 0.35s ease-out both;
+}
+
+.love-confirmation {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.love-confirmation-card {
+  position: relative;
+  width: min(90vw, 520px);
+  border-radius: 28px;
+  padding: 24px 20px;
+  text-align: center;
+  border: 1px solid rgba(216, 121, 154, 0.58);
+  background:
+    linear-gradient(165deg, rgba(255, 246, 249, 0.76), rgba(255, 235, 242, 0.72));
+  box-shadow:
+    0 24px 72px rgba(132, 59, 85, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  animation: loveCardIn 0.46s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+.love-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px 7px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff8fb;
+  background:
+    linear-gradient(145deg, rgba(193, 74, 116, 0.96), rgba(154, 52, 89, 0.96));
+  box-shadow:
+    0 10px 24px rgba(132, 47, 77, 0.42),
+    inset 0 1px 0 rgba(255, 228, 237, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.love-close svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.love-close:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 13px 28px rgba(132, 47, 77, 0.5),
+    inset 0 1px 0 rgba(255, 228, 237, 0.45);
+  filter: saturate(1.08);
+}
+
+.love-close:focus-visible {
+  outline: 2px solid rgba(255, 232, 240, 0.94);
+  outline-offset: 2px;
+}
+
+.love-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(158, 64, 95, 0.8);
+}
+
+.love-question {
+  margin: 8px 0 0;
+  line-height: 1.2;
+  font-size: clamp(30px, 6vw, 44px);
+  color: rgba(124, 41, 71, 0.95);
+  text-shadow:
+    0 1px 0 rgba(255, 235, 242, 0.86),
+    0 10px 28px rgba(165, 69, 106, 0.34);
+}
+
+.love-yes {
+  margin: 8px 0 0;
+  font-size: clamp(40px, 10vw, 78px);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: rgba(172, 58, 101, 0.98);
+  text-shadow:
+    0 2px 0 rgba(255, 240, 246, 0.9),
+    0 14px 34px rgba(161, 56, 97, 0.38);
+  animation: loveYesPulse 1.05s ease-in-out infinite;
+}
+
+.love-shower {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.love-shower-heart {
+  position: absolute;
+  top: -30px;
+  color: rgba(195, 75, 114, 0.78);
+  text-shadow: 0 8px 24px rgba(177, 74, 109, 0.36);
+  animation-name: loveShowerFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.intro-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 232, 238, 0.92), transparent 40%),
+    radial-gradient(circle at 78% 74%, rgba(255, 198, 214, 0.66), transparent 42%),
+    radial-gradient(circle at 54% 88%, rgba(255, 234, 203, 0.58), transparent 38%),
+    linear-gradient(150deg, rgba(255, 243, 236, 0.95), rgba(250, 214, 222, 0.9));
+}
+
+.intro-exit {
+  animation: introFadeOut 0.5s ease forwards;
+}
+
+.intro-aura {
+  position: absolute;
+  width: 430px;
+  height: 430px;
+  border-radius: 999px;
+  filter: blur(44px);
+  opacity: 0.68;
+  animation: driftAura 6.4s ease-in-out infinite alternate;
+}
+
+.intro-aura-left {
+  left: -120px;
+  top: -100px;
+  background: radial-gradient(circle, rgba(255, 184, 205, 0.88), transparent 68%);
+}
+
+.intro-aura-right {
+  right: -120px;
+  bottom: -115px;
+  animation-delay: -2.8s;
+  background: radial-gradient(circle, rgba(255, 214, 178, 0.84), transparent 68%);
+}
+
+.intro-ring {
+  position: absolute;
+  border-radius: 999px;
+  border: 1px solid rgba(204, 108, 141, 0.25);
+  box-shadow: 0 0 40px rgba(207, 116, 146, 0.14);
+  pointer-events: none;
+  animation: ringPulse 5.8s ease-in-out infinite;
+}
+
+.intro-ring-one {
+  width: min(72vw, 760px);
+  aspect-ratio: 1 / 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.intro-ring-two {
+  width: min(58vw, 580px);
+  aspect-ratio: 1 / 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -2.5s;
+}
+
+.intro-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.intro-sparkle {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 246, 250, 0.95), rgba(255, 226, 235, 0.2));
+  filter: blur(0.4px);
+  opacity: 0;
+  animation: sparkleBlink ease-in-out infinite;
+}
+
+.intro-hearts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.intro-heart {
+  position: absolute;
+  bottom: -24px;
+  color: rgba(185, 73, 111, 0.54);
+  text-shadow: 0 8px 28px rgba(169, 75, 108, 0.42);
+  animation-name: floatHeart;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.intro-card {
+  position: relative;
+  width: min(95vw, 880px);
+  border-radius: 30px;
+  padding: 24px 18px 22px;
+  border: 1px solid rgba(209, 148, 165, 0.4);
+  background: rgba(255, 247, 241, 0.68);
+  backdrop-filter: blur(22px);
+  box-shadow:
+    0 26px 80px rgba(113, 67, 82, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: introCardIn 0.8s ease-out both;
+}
+
+.intro-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.intro-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(174, 90, 117, 0.74);
+}
+
+.intro-title {
+  margin: 0;
+  line-height: 1.2;
+  font-size: clamp(30px, 5vw, 42px);
+  color: rgba(96, 47, 64, 0.92);
+}
+
+.intro-gesture-note {
+  margin: 0;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(152, 65, 94, 0.92);
+  background: rgba(255, 224, 233, 0.72);
+  border: 1px solid rgba(206, 112, 143, 0.34);
+}
+
+.intro-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: revealDetails 0.35s ease-out both;
+}
+
+.intro-instruction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px 12px;
+  text-align: left;
+}
+
+.intro-step {
+  border-radius: 18px;
+  border: 1px solid rgba(201, 134, 154, 0.36);
+  background: rgba(255, 252, 248, 0.75);
+  padding: 14px 13px 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.intro-step-priority {
+  border-color: rgba(179, 82, 116, 0.52);
+  background:
+    linear-gradient(160deg, rgba(255, 238, 244, 0.82), rgba(255, 246, 241, 0.78));
+}
+
+.intro-step-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 221, 231, 0.72);
+  border: 1px solid rgba(199, 122, 148, 0.32);
+  margin-bottom: 8px;
+}
+
+.intro-step-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: rgba(153, 65, 95, 0.94);
+}
+
+.intro-step h3 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(113, 48, 71, 0.95);
+}
+
+.intro-step p {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(97, 53, 68, 0.82);
+}
+
+.intro-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.intro-continue {
+  margin-top: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 26px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff6f3;
+  background:
+    linear-gradient(130deg, #cb6f86 0%, #b55b78 45%, #9a4e69 100%);
+  box-shadow:
+    0 12px 34px rgba(163, 83, 109, 0.44),
+    inset 0 1px 0 rgba(255, 225, 234, 0.5);
+  cursor: pointer;
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+  animation: buttonGlow 2.4s ease-in-out infinite alternate;
+}
+
+.intro-continue:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow:
+    0 16px 38px rgba(163, 83, 109, 0.5),
+    inset 0 1px 0 rgba(255, 225, 234, 0.5);
+}
+
+.intro-continue:active {
+  transform: translateY(0);
+}
+
+.intro-continue:focus-visible {
+  outline: 2px solid rgba(164, 75, 104, 0.6);
+  outline-offset: 3px;
+}
+
+@keyframes fadeRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes valentinePulse {
+  0%,
+  68%,
+  100% {
+    transform: scale(1);
+    filter: saturate(100%);
+    text-shadow:
+      0 1px 0 rgba(255, 238, 243, 0.65),
+      0 6px 20px rgba(163, 77, 108, 0.26);
+  }
+  73% {
+    transform: scale(1.055);
+    filter: saturate(118%);
+    text-shadow:
+      0 1px 0 rgba(255, 240, 246, 0.78),
+      0 10px 26px rgba(165, 70, 106, 0.46);
+  }
+  78% {
+    transform: scale(1);
+  }
+  83% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes loveOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loveCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes loveYesPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: saturate(102%);
+  }
+  45% {
+    transform: scale(1.08);
+    filter: saturate(128%);
+  }
+}
+
+@keyframes loveShowerFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8vh) translateX(0) rotate(-5deg) scale(0.85);
+  }
+  14% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(112vh) translateX(20px) rotate(22deg) scale(1.15);
+  }
+}
+
+@keyframes pulseLayer {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes driftAura {
+  from {
+    transform: translate3d(-4px, 4px, 0) scale(0.92);
+  }
+  to {
+    transform: translate3d(16px, -16px, 0) scale(1.08);
+  }
+}
+
+@keyframes floatHeart {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.86) rotate(0deg);
+  }
+  12% {
+    opacity: 0.78;
+  }
+  55% {
+    transform: translateY(-55vh) translateX(14px) scale(1.05) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-118vh) translateX(-12px) scale(1.22) rotate(-5deg);
+  }
+}
+
+@keyframes introCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes introFadeOut {
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+    visibility: hidden;
+  }
+}
+
+@keyframes buttonGlow {
+  from {
+    filter: saturate(100%);
+  }
+  to {
+    filter: saturate(114%);
+  }
+}
+
+@keyframes ringPulse {
+  0% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+@keyframes sparkleBlink {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  35% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 0.28;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes revealDetails {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 768px) {
+  .intro-card {
+    padding: 32px 32px 28px;
+    gap: 24px;
+  }
+
+  .intro-kicker {
+    font-size: 12px;
+  }
+
+  .intro-heading {
+    gap: 14px;
+  }
+
+  .intro-gesture-note {
+    font-size: 12px;
+    padding: 7px 13px;
+  }
+
+  .intro-step {
+    padding: 15px 14px 14px;
+  }
+
+  .intro-step h3 {
+    font-size: 13px;
+  }
+
+  .intro-step p {
+    font-size: 12px;
+    margin-top: 7px;
+  }
+
+  .intro-instruction-grid {
+    gap: 15px;
+  }
+
+  .intro-continue {
+    font-size: 13px;
+    padding: 11px 30px;
+  }
+}
