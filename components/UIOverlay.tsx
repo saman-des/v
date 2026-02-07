@@ -98,8 +98,8 @@ const UIOverlay: React.FC<Props> = ({ handData }) => {
           <h1 className="valentine-title mt-0.5 text-base font-bold leading-tight tracking-tight md:text-[1.6rem]">
             Will you be my Valentine?
           </h1>
-          <p className="mt-2 text-[11px] leading-relaxed text-rose-900/70 md:text-[13px]">
-            Make a heart with your hands to reply.
+          <p className="mt-2 text-[14px] leading-relaxed text-rose-900/70 md:text-[16px]">
+            Make a heart 🫶 with your hands to reply.
           </p>
         </div>
       </div>
