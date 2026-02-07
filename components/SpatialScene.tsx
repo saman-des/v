@@ -106,6 +106,60 @@ const createFrameTexture = (
   return texture;
 };
 
+const buildTextureCandidateUrls = (url: string): string[] => {
+  const match = url.match(/^([^?#]+?)(\.[^./?#]+)(\?[^#]*)?(#.*)?$/);
+  if (!match) return [url];
+
+  const basePath = match[1];
+  const query = match[3] ?? "";
+  const hash = match[4] ?? "";
+  const extension = match[2].toLowerCase();
+  const suffix = `${query}${hash}`;
+
+  const jpgVariants = [".jpg", ".JPG", ".jpeg", ".JPEG"];
+  const pngVariants = [".png", ".PNG"];
+  const webpVariants = [".webp", ".WEBP"];
+
+  let variants = [match[2]];
+  if (extension === ".jpg" || extension === ".jpeg") {
+    variants = [...jpgVariants, ...pngVariants, ...webpVariants];
+  } else if (extension === ".png") {
+    variants = [...pngVariants, ...jpgVariants, ...webpVariants];
+  } else if (extension === ".webp") {
+    variants = [...webpVariants, ...jpgVariants, ...pngVariants];
+  }
+
+  return Array.from(
+    new Set(variants.map((ext) => `${basePath}${ext}${suffix}`)),
+  );
+};
+
+const loadTextureWithFallbacks = (
+  loader: THREE.TextureLoader,
+  candidates: string[],
+  onLoad: (texture: THREE.Texture) => void,
+  onError: (lastUrl: string, err: unknown, attempted: string[]) => void,
+) => {
+  const tryLoad = (index: number) => {
+    const currentUrl = candidates[index];
+    loader.load(
+      currentUrl,
+      onLoad,
+      undefined,
+      (err) => {
+        const hasNext = index + 1 < candidates.length;
+        if (hasNext) {
+          tryLoad(index + 1);
+          return;
+        }
+        onError(currentUrl, err, candidates);
+      },
+    );
+  };
+
+  tryLoad(0);
+};
+
 const SpatialScene: React.FC<Props> = ({ images, handData }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
@@ -233,9 +287,12 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
       cardGroup.add(frameMesh);
       cardGroup.add(mesh);
 
-      // Load texture with error handling
-      textureLoader.load(
-        img.url,
+      const textureCandidates = buildTextureCandidateUrls(img.url);
+
+      // Load texture with extension/case fallbacks
+      loadTextureWithFallbacks(
+        textureLoader,
+        textureCandidates,
         (texture) => {
           const imageSource = texture.image as DrawableSource | undefined;
           const hasDimensions =
@@ -297,8 +354,11 @@ const SpatialScene: React.FC<Props> = ({ images, handData }) => {
           }
         },
         undefined,
-        (err) => {
-          console.error(`Failed to load texture: ${img.url}`, err);
+        (lastUrl, err, attempted) => {
+          console.error(
+            `Failed to load texture after trying: ${attempted.join(", ")}`,
+            { initialUrl: img.url, lastUrl, error: err },
+          );
           material.map = null;
           material.color.set(0xffd6de);
           material.needsUpdate = true;

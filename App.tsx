@@ -6,7 +6,7 @@ import IntroScreen from "./components/IntroScreen";
 import { HandData, ShowreelImage } from "./types";
 
 // Using local images from public/images folder
-const INITIAL_IMAGES: ShowreelImage[] = Array.from({ length: 22 }).map(
+const INITIAL_IMAGES: ShowreelImage[] = Array.from({ length: 28 }).map(
   (_, i) => ({
     id: `img-${i}`,
     url: `/images/${i + 1}.jpg`,
